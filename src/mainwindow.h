@@ -7,6 +7,16 @@
 #include <QStatusBar>
 #include <QAction>
 #include <QMessageBox>
+#include <QTableView>
+#include <QSqlQueryModel>
+#include <QSqlError>
+#include <QHeaderView>
+#include <QGridLayout>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
+#include <iostream>
 
 class MainWindow : public QMainWindow
 {
@@ -22,9 +32,12 @@ private slots:
 
 private:
 	void openDbConnectionDialog();
+	bool connectToDatabase();
 	void createStatusBar();
 	void createActions();
 	void createMenus();
+	void setupTableView();
+	void setupDataEntryFrame();
 
 	QStatusBar *mainStatusBar;
 	QMenu *fileMenu;
@@ -33,6 +46,11 @@ private:
 	QAction *quitAct;
 	QAction *connectAct;
 	QDialog *loginDialog;
+	QWidget *centralWidget;
+	QFrame *dataEntryFrame;
+	QSqlDatabase db;
+	QTableView *contactsView;
+	QVBoxLayout *mainLayout;
 };
 
 #endif // MAINWINDOW_H
