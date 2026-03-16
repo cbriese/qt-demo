@@ -16,6 +16,8 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QDialogButtonBox>
+#include <QString>
 #include <iostream>
 
 class MainWindow : public QMainWindow

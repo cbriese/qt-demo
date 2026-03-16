@@ -36,8 +36,77 @@ void MainWindow::openDbConnectionDialog()
 {
 	loginDialog = new QDialog(this);
 	loginDialog->setWindowTitle("Enter Database Credentials");
-	loginDialog->resize(400,300);
-	loginDialog->exec();
+	// loginDialog->resize(400,300);
+
+	// Create some widgets to put into the dialog?
+	QGridLayout *dbConnectLayout = new QGridLayout(loginDialog);
+
+	// Set up widgets to collect database login credentials
+	QLabel *dbHostnameLabel = new QLabel(tr("DB Hostname:"));
+	QLabel *dbNameLabel = new QLabel(tr("DB Name:"));
+	QLabel *dbUsernameLabel = new QLabel(tr("DB Username:"));
+	QLabel *dbPasswordLabel = new QLabel(tr("DB Password:"));
+	QLineEdit *dbHostnameEntry = new QLineEdit();
+	QLineEdit *dbNameEntry = new QLineEdit();
+	QLineEdit *dbUsernameEntry = new QLineEdit();
+	QLineEdit *dbPasswordEntry = new QLineEdit();
+	dbPasswordEntry->setEchoMode(QLineEdit::Password);
+
+	QDialogButtonBox *dbConnectButtonBox = new QDialogButtonBox(
+		QDialogButtonBox::Cancel | QDialogButtonBox::Ok,
+		Qt::Horizontal, loginDialog
+	);
+	connect(dbConnectButtonBox, &QDialogButtonBox::accepted, loginDialog, &QDialog::accept);
+	connect(dbConnectButtonBox, &QDialogButtonBox::rejected, loginDialog, &QDialog::reject);
+
+	// Add widgets to the layout
+	dbConnectLayout->addWidget(dbHostnameLabel, 0, 0);
+	dbConnectLayout->addWidget(dbNameLabel, 1, 0);
+	dbConnectLayout->addWidget(dbUsernameLabel, 2, 0);
+	dbConnectLayout->addWidget(dbPasswordLabel, 3, 0);
+	dbConnectLayout->addWidget(dbHostnameEntry, 0, 1);
+	dbConnectLayout->addWidget(dbNameEntry, 1, 1);
+	dbConnectLayout->addWidget(dbUsernameEntry, 2, 1);
+	dbConnectLayout->addWidget(dbPasswordEntry, 3, 1);
+	dbConnectLayout->addWidget(dbConnectButtonBox, 4, 0, 1, 2, Qt::AlignCenter);
+
+	loginDialog->setLayout(dbConnectLayout);
+
+	while (1) {
+		int value = loginDialog->exec();
+
+		std::cerr << "The value returned from the dialog was " << value << std::endl;
+
+		if (value == 1)
+		{
+			// How do i get the values from these form fields?
+			if (dbHostnameEntry->text().isEmpty()) {
+				continue;
+			}
+
+			if (dbNameEntry->text().isEmpty()) {
+				continue;
+			}
+
+			if (dbUsernameEntry->text().isEmpty()) {
+				continue;
+			}
+
+			if (dbPasswordEntry->text().isEmpty()) {
+				continue;
+			}
+ 
+			std::cerr << "The DB hostname entered was " << dbHostnameEntry->text().toStdString() << std::endl;
+			std::cerr << "The DB name entered was " << dbNameEntry->text().toStdString() << std::endl;
+			std::cerr << "The DB username entered was " << dbUsernameEntry->text().toStdString() << std::endl;
+			std::cerr << "The DB password entered was " << dbPasswordEntry->text().toStdString() << std::endl;
+			break;
+		}
+		else
+		{
+			break;
+		}
+	}
 }
 
 // Method to create the actions
@@ -154,7 +223,7 @@ void MainWindow::setupDataEntryFrame()
 	dataEntryLayout->addWidget(firstEdit, 0, 1);
 	dataEntryLayout->addWidget(lastLabel, 1, 0);
 	dataEntryLayout->addWidget(lastEdit, 1, 1);
-	dataEntryLayout->addWidget(addContactButton, 2, 1);
+	dataEntryLayout->addWidget(addContactButton, 2, 1, 1, 2);
 
 }
 
