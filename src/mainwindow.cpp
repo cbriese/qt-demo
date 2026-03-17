@@ -1,19 +1,35 @@
 #include <QApplication>
 #include "mainwindow.h"
 
-// Constructor
+// Constructor for the main window
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+	// Create status bar
 	createStatusBar();
+
+	// Create actions
 	createActions();
+
+	// Create the menus
 	createMenus();
+
+	// Prepare data pane
 	setupTableView();
+
+	// Prepare data entry frame
 	setupDataEntryFrame();
+
+	// Display a message in the status bar
 	mainStatusBar->showMessage("Ready. Not connected.");
+
+	// Create a central widget for the main window
 	centralWidget = new QWidget;
-	mainLayout = new QVBoxLayout(centralWidget);
 	setCentralWidget(centralWidget);
+
+	// Create a vertical box layout for the main window contents
+	mainLayout = new QVBoxLayout(centralWidget);
+
 	// Add data entry and display widgets to the central widget layout
 	mainLayout->addWidget(dataEntryFrame);
 	mainLayout->addWidget(contactsView);
@@ -26,12 +42,20 @@ MainWindow::~MainWindow()
 {
 }
 
+/*
+ * Creates a status bar for the main window
+ */
 void MainWindow::createStatusBar()
 {
 	mainStatusBar = new QStatusBar(this);
 	this->setStatusBar(mainStatusBar);
 }
 
+/*
+ * This method will display a dialog box to allow the user
+ * to enter the hostname, database name, username,
+ * and password for the database connection
+ */
 void MainWindow::openDbConnectionDialog()
 {
 	loginDialog = new QDialog(this);
@@ -75,7 +99,9 @@ void MainWindow::openDbConnectionDialog()
 	while (1) {
 		int value = loginDialog->exec();
 
+#ifdef DEBUG
 		std::cerr << "The value returned from the dialog was " << value << std::endl;
+#endif
 
 		if (value == 1)
 		{
@@ -96,10 +122,23 @@ void MainWindow::openDbConnectionDialog()
 				continue;
 			}
  
+			// db.setHostName(std::getenv("CONTACTS_DB_HOSTNAME"));
+			// db.setDatabaseName(std::getenv("CONTACTS_DB_NAME"));
+			// db.setUserName(std::getenv("CONTACTS_DB_USERNAME"));
+			// db.setPassword(std::getenv("CONTACTS_DB_PASSWORD"));
+
+			db.setHostName(dbHostnameEntry->text());
+			db.setDatabaseName(dbNameEntry->text());
+			db.setUserName(dbUsernameEntry->text());
+			db.setPassword(dbPasswordEntry->text());
+
+#ifdef DEBUG
 			std::cerr << "The DB hostname entered was " << dbHostnameEntry->text().toStdString() << std::endl;
 			std::cerr << "The DB name entered was " << dbNameEntry->text().toStdString() << std::endl;
 			std::cerr << "The DB username entered was " << dbUsernameEntry->text().toStdString() << std::endl;
 			std::cerr << "The DB password entered was " << dbPasswordEntry->text().toStdString() << std::endl;
+#endif
+
 			break;
 		}
 		else
@@ -150,11 +189,15 @@ void MainWindow::about()
 		"use various Qt features."));
 }
 
+// Callback to quit the application
 void MainWindow::quit()
 {
 	QApplication::quit();
 }
 
+/*
+ * Connects to the database
+ */
 bool MainWindow::connectToDatabase() {
 	db = QSqlDatabase::addDatabase("QPSQL");
 	// NEED to replace with environment variables
@@ -199,6 +242,10 @@ bool MainWindow::connectToDatabase() {
 	}
 }
 
+/*
+ * Prepare the area of the main window that allows the user
+ * to enter data for a new contact.
+ */
 void MainWindow::setupDataEntryFrame()
 {
 	// Create a frame to old the data entry widgets
@@ -227,10 +274,14 @@ void MainWindow::setupDataEntryFrame()
 
 }
 
+/*
+ * Prepare the area of the main window that will display the contacts
+ */
 void MainWindow::setupTableView()
 {
 	// Create a QSqlQueryModel to hold the data
 	QSqlQueryModel *model = new QSqlQueryModel();
+
 	if (db.isOpen())
 	{
 		model->setQuery("SELECT id, first_name, last_name FROM public.contacts ORDER BY id ASC");
@@ -256,6 +307,8 @@ void MainWindow::setupTableView()
 	// Hide the vertical header of the table
 	contactsView->verticalHeader()->hide();
 
+#ifdef DEBUG
 	std::cerr << "Made it here" << std::endl;
+#endif
 }
 
