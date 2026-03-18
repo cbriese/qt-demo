@@ -14,6 +14,9 @@ int main(int argc, char *argv[])
 	// Show main window
 	w.show();
 
+	// Open the database connection dialog
+	w.openDbConnectionDialog();
+
 	// Run it
 	return a.exec();
 }

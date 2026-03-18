@@ -37,8 +37,6 @@ MainWindow::MainWindow(QWidget *parent)
 	mainLayout->addWidget(dataEntryFrame);
 	mainLayout->addWidget(contactsView);
 
-	openDbConnectionDialog();
-
 	resize(800, 600);
 }
 
@@ -65,7 +63,8 @@ void MainWindow::openDbConnectionDialog()
 {
 	if (db.isOpen()) {
 		// Tell user the DB is already connected and return
-		QMessageBox::information(this, tr("Yo"), tr("Already connected to the database"));
+		QString msg = "Already connected to database ";
+		QMessageBox::information(this, tr("Connection Status"), msg.append(db.databaseName()));
 		mainStatusBar->showMessage("Connected");
 		return;
 	}
@@ -126,22 +125,22 @@ void MainWindow::openDbConnectionDialog()
 		{
 			// How do i get the values from these form fields?
 			if (dbHostnameEntry->text().isEmpty()) {
-				mainStatusBar->showMessage("Database hostname required", 0);
+				QMessageBox::warning(this, "Connection Status", tr("Database hostname required"));
 				continue;
 			}
 
 			if (dbNameEntry->text().isEmpty()) {
-				mainStatusBar->showMessage("Database name required");
+				QMessageBox::warning(this, "Connection Status", tr("Database name required"));
 				continue;
 			}
 
 			if (dbUsernameEntry->text().isEmpty()) {
-				mainStatusBar->showMessage("Database username required");
+				QMessageBox::warning(this, "Connection Status", tr("Database username required"));
 				continue;
 			}
 
 			if (dbPasswordEntry->text().isEmpty()) {
-				mainStatusBar->showMessage("Database password required");
+				QMessageBox::warning(this, "Connection Status", tr("Database password required"));
 				continue;
 			}
  
@@ -164,6 +163,7 @@ void MainWindow::openDbConnectionDialog()
 
 			if (!db.open()) {
 				qDebug() << "Database connection failed:" << db.lastError().text();
+				QMessageBox::warning(this, tr("Connection Error"), db.lastError().text());
 				this->mainStatusBar->showMessage(db.lastError().text());
 				continue;
 			} else {
@@ -216,9 +216,14 @@ void MainWindow::createActions()
 void MainWindow::disconnectDb()
 {
 	if (db.isOpen()) {
+		// QSqlQueryModel *model = qobject_cast<QSqlQueryModel*>(contactsView->model());
+		contactsView->setModel(nullptr);
 		db.close();
 	}
-
+	else
+	{
+		QMessageBox::information(this, "Connection Status", tr("Not connected"));
+	}
 	mainStatusBar->showMessage("Disconnected");
 }
 
@@ -287,9 +292,12 @@ void MainWindow::refreshContactsView()
 
 	model->setQuery("SELECT id, first_name, last_name FROM public.contacts ORDER BY id ASC");
 
-	if (!model->lastError().isValid())
+	if (model->lastError().isValid())
 	{
-		mainStatusBar->showMessage(model->lastError().text());
+		QMessageBox::warning(this, tr("Huh?"), model->lastError().text());
+		db.close();
+		mainStatusBar->showMessage(tr("Disconnected"));
+		return;
 	}
 	// Set human-readable headers (optional)
 	model->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));

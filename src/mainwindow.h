@@ -27,13 +27,13 @@ class MainWindow : public QMainWindow
 public:
 	MainWindow(QWidget *parent = nullptr);
 	~MainWindow();
+	void openDbConnectionDialog();
 
 private slots:
 	void about();
 	void quit();
 
 private:
-	void openDbConnectionDialog();
 	bool connectToDatabase();
 	void createStatusBar();
 	void createActions();
