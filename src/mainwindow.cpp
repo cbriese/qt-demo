@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
 	// Add data table widget to the central widget layout
 	mainLayout->addWidget(contactsView);
 
-	resize(800, 600);
+	resize(1024, 768);
 }
 
 // Destructor
@@ -302,9 +302,10 @@ void MainWindow::notImplemented() {
 
 void MainWindow::refreshContactsView()
 {
-	QSqlQueryModel *model = new QSqlQueryModel();
-
-	model->setQuery("SELECT id, first_name, last_name FROM public.contacts ORDER BY id ASC");
+	QSqlTableModel *model = new QSqlTableModel();
+	model->setTable("contacts");
+	model->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	model->select();
 
 	if (model->lastError().isValid())
 	{
@@ -319,8 +320,21 @@ void MainWindow::refreshContactsView()
 	model->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
 	model->setHeaderData(1, Qt::Horizontal, QObject::tr("First Name"));
 	model->setHeaderData(2, Qt::Horizontal, QObject::tr("Last Name"));
+	model->setHeaderData(3, Qt::Horizontal, QObject::tr("Address 1"));
+	model->setHeaderData(4, Qt::Horizontal, QObject::tr("Address 2"));
+	model->setHeaderData(5, Qt::Horizontal, QObject::tr("City"));
+	model->setHeaderData(6, Qt::Horizontal, QObject::tr("State"));
+	model->setHeaderData(7, Qt::Horizontal, QObject::tr("Zip Code"));
+	model->setHeaderData(8, Qt::Horizontal, QObject::tr("Phone #1"));
+	model->setHeaderData(9, Qt::Horizontal, QObject::tr("Phone #2"));
+	model->setHeaderData(10, Qt::Horizontal, QObject::tr("E-mail #1"));
+	model->setHeaderData(11, Qt::Horizontal, QObject::tr("E-mail #2"));
+	model->setHeaderData(12, Qt::Horizontal, QObject::tr("Birthday"));
 
 	contactsView->setModel(model);
+	contactsView->hideColumn(0);
+	contactsView->resizeColumnsToContents();
+	contactsView->horizontalHeader()->setStretchLastSection(true);
 }
 
 /*
@@ -328,13 +342,9 @@ void MainWindow::refreshContactsView()
  */
 void MainWindow::setupTableView()
 {
-	// Create a QSqlQueryModel to hold the data
-	QSqlQueryModel *model = new QSqlQueryModel();
-
 	// Create a QTableView and set the model
 	contactsView = new QTableView();
 	contactsView->horizontalHeader()->setStretchLastSection(true);
-	contactsView->resizeColumnsToContents();
 
 	// Hide the vertical header of the table
 	contactsView->verticalHeader()->hide();
@@ -342,12 +352,6 @@ void MainWindow::setupTableView()
 	if (db.isOpen())
 	{
 		this->refreshContactsView();
-	}
-
-	// Check for query errors
-	if (model->lastError().isValid()) {
-		qDebug() << "Query failed:" << model->lastError().text();
-		this->quit();
 	}
 
 #ifdef DEBUG

@@ -8,7 +8,7 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QTableView>
-#include <QSqlQueryModel>
+#include <QSqlTableModel>
 #include <QSqlError>
 #include <QHeaderView>
 #include <QGridLayout>
