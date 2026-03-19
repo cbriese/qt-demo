@@ -14,11 +14,8 @@ MainWindow::MainWindow(QWidget *parent)
 	// Create the menus
 	createMenus();
 
-	// Prepare data pane
+	// Prepare data table
 	setupTableView();
-
-	// Prepare data entry frame
-	setupDataEntryFrame();
 
 	// Display a message in the status bar
 	mainStatusBar->showMessage("Ready. Not connected.");
@@ -33,8 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
 	// Set database driver for default database connection
 	db = QSqlDatabase::addDatabase("QPSQL");
 
-	// Add data entry and display widgets to the central widget layout
-	mainLayout->addWidget(dataEntryFrame);
+	// Add data table widget to the central widget layout
 	mainLayout->addWidget(contactsView);
 
 	resize(800, 600);
