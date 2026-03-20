@@ -11,6 +11,9 @@ MainWindow::MainWindow(QWidget *parent)
 	// Create actions
 	createActions();
 
+	// Create toolbars
+	createToolbars();
+
 	// Create the menus
 	createMenus();
 
@@ -48,6 +51,151 @@ void MainWindow::createStatusBar()
 {
 	mainStatusBar = new QStatusBar(this);
 	this->setStatusBar(mainStatusBar);
+}
+
+/*
+ * Create a dialog box to create or modify a contact.
+ */
+void MainWindow::createOrEditContact(const int contact_id)
+{
+	// Create a frame to old the data entry widgets
+	contactDialog = new QDialog(this);
+
+	contactDialog->setWindowTitle("Create Contact");
+
+	// Create a layout for the data entry widgets
+	QGridLayout *contactLayout = new QGridLayout(contactDialog);
+
+	// Create labels for data entry
+	QLabel *firstLabel = new QLabel(QObject::tr("First Name:"));
+	QLabel *lastLabel = new QLabel(QObject::tr("Last Name:"));
+	QLabel *address1Label = new QLabel(QObject::tr("Address 1:"));
+	QLabel *address2Label = new QLabel(QObject::tr("Address 2:"));
+	QLabel *cityLabel = new QLabel(QObject::tr("City:"));
+	QLabel *stateLabel = new QLabel(QObject::tr("State:"));
+	QLabel *zipLabel = new QLabel(QObject::tr("Zip Code:"));
+	QLabel *phone1Label = new QLabel(QObject::tr("Phone #1:"));
+	QLabel *phone2Label = new QLabel(QObject::tr("Phone #2:"));
+	QLabel *email1Label = new QLabel(QObject::tr("E-mail #1:"));
+	QLabel *email2Label = new QLabel(QObject::tr("E-mail #2:"));
+	QLabel *bdayLabel = new QLabel(QObject::tr("Birthday:"));
+
+	// Create widgets for data entry
+	QLineEdit *firstEdit = new QLineEdit();
+	QLineEdit *lastEdit = new QLineEdit();
+	QLineEdit *address1Edit = new QLineEdit();
+	QLineEdit *address2Edit = new QLineEdit();
+	QLineEdit *cityEdit = new QLineEdit();
+	QLineEdit *stateEdit = new QLineEdit();
+	QLineEdit *zipEdit = new QLineEdit();
+	QLineEdit *phone1Edit = new QLineEdit();
+	QLineEdit *phone2Edit = new QLineEdit();
+	QLineEdit *email1Edit = new QLineEdit();
+	QLineEdit *email2Edit = new QLineEdit();
+	QCalendarWidget *bdayCalendar = new QCalendarWidget();
+
+	phone1Edit->setInputMask("999-999-9999");
+	phone2Edit->setInputMask("999-999-9999");
+	stateEdit->setInputMask(">AA");
+	zipEdit->setInputMask("99999");
+
+	QDialogButtonBox *contactButtonBox = new QDialogButtonBox(
+		QDialogButtonBox::Cancel | QDialogButtonBox::Ok,
+		Qt::Horizontal, contactDialog
+	);
+	connect(contactButtonBox, &QDialogButtonBox::accepted, contactDialog, &QDialog::accept);
+	connect(contactButtonBox, &QDialogButtonBox::rejected, contactDialog, &QDialog::reject);
+
+	// Add labels to data entry layout
+	contactLayout->addWidget(firstLabel, 0, 0);
+	contactLayout->addWidget(firstEdit, 1, 0);
+	contactLayout->addWidget(lastLabel, 2, 0);
+	contactLayout->addWidget(lastEdit, 3, 0);
+	contactLayout->addWidget(address1Label, 0, 2, 1, 3);
+	contactLayout->addWidget(address1Edit, 1, 2, 1, 3);
+	contactLayout->addWidget(address2Label, 2, 2, 1, 3);
+	contactLayout->addWidget(address2Edit, 3, 2, 1, 3);
+	contactLayout->addWidget(cityLabel, 4, 2);
+	contactLayout->addWidget(cityEdit, 5, 2);
+	contactLayout->addWidget(stateLabel, 4, 4);
+	contactLayout->addWidget(stateEdit, 5, 4);
+	contactLayout->addWidget(zipLabel, 6, 2);
+	contactLayout->addWidget(zipEdit, 7, 2);
+	contactLayout->addWidget(phone1Label, 0, 6);
+	contactLayout->addWidget(phone1Edit, 1, 6);
+	contactLayout->addWidget(phone2Label, 2, 6);
+	contactLayout->addWidget(phone2Edit, 3, 6);
+	contactLayout->addWidget(email1Label, 4, 6);
+	contactLayout->addWidget(email1Edit, 5, 6);
+	contactLayout->addWidget(email2Label, 6, 6);
+	contactLayout->addWidget(email2Edit, 7, 6);
+	contactLayout->addWidget(bdayLabel, 4, 0);
+	contactLayout->addWidget(bdayCalendar, 5, 0, 5, 1);
+	
+	contactLayout->addWidget(contactButtonBox, 10, 0, 1, 7, Qt::AlignCenter);
+
+	contactLayout->setColumnMinimumWidth(0, 150);
+	contactLayout->setColumnMinimumWidth(1, 5);
+	contactLayout->setColumnMinimumWidth(2, 125);
+	contactLayout->setColumnMinimumWidth(3, 5);
+	contactLayout->setColumnMinimumWidth(4, 125);
+	contactLayout->setColumnMinimumWidth(5, 5);
+	contactLayout->setColumnMinimumWidth(6, 300);
+
+	firstEdit->setFocus();
+
+	int value;
+
+	while (value = contactDialog->exec())
+	{
+		if (value == 1)
+		{
+			if (firstEdit->text().isEmpty())
+			{
+				continue;
+			}
+
+			if (lastEdit->text().isEmpty())
+			{
+				continue;
+			}
+
+			QSqlRecord rec = contactsModel->record();
+
+			rec.setValue(1, firstEdit->text());
+			rec.setValue(2, lastEdit->text());
+			rec.setValue(3, address1Edit->text());
+			rec.setValue(4, address2Edit->text());
+			rec.setValue(5, cityEdit->text());
+			rec.setValue(6, stateEdit->text());
+			rec.setValue(7, zipEdit->text());
+			rec.setValue(8, phone1Edit->text());
+			rec.setValue(9, phone2Edit->text());
+			rec.setValue(10, email1Edit->text());
+			rec.setValue(11, email2Edit->text());
+
+			bool success = contactsModel->insertRecord(-1, rec);
+
+			std::cerr << contactsModel->lastError().text().toStdString() << std::endl;
+
+			if (success) {
+				std::cerr << "Insert worked!" << std::endl;
+			}
+			else
+			{
+				std::cerr << "Insert failed!!" << std::endl;
+			}
+
+			for (int i =0; i < rec.count(); i++)
+			{
+				std::cerr << "Column " << i << " is " << rec.fieldName(i).toStdString() << std::endl;
+			}
+		} else {
+			// User clicked "Cancel"
+		}
+
+		break;
+	}
 }
 
 /*
@@ -197,6 +345,14 @@ void MainWindow::openDbConnectionDialog()
 	}
 }
 
+// Method to create toolbar
+void MainWindow::createToolbars()
+{
+	fileToolBar = addToolBar(tr("File"));
+	fileToolBar->addAction(newContactAct);
+	fileToolBar->setAllowedAreas(Qt::TopToolBarArea);
+}
+
 // Method to create the actions
 void MainWindow::createActions()
 {
@@ -220,12 +376,17 @@ void MainWindow::createActions()
 	disconnectAct = new QAction(tr("&Disconnect"), this);
 	disconnectAct->setStatusTip(tr("Disconnect from the database"));
 	connect(disconnectAct, &QAction::triggered, this, &MainWindow::disconnectDb);
+
+	// Create "New Contact" action
+	newContactAct = new QAction(QIcon::fromTheme(QIcon::ThemeIcon::DocumentNew), tr("&New"), this);
+	newContactAct->setShortcuts(QKeySequence::New);
+	newContactAct->setStatusTip(tr("Create a new contact"));
+	connect(newContactAct, &QAction::triggered, this, &MainWindow::createOrEditContact);
 }
 
 void MainWindow::disconnectDb()
 {
 	if (db.isOpen()) {
-		// QSqlQueryModel *model = qobject_cast<QSqlQueryModel*>(contactsView->model());
 		contactsView->setModel(nullptr);
 		db.close();
 	}
@@ -263,78 +424,47 @@ void MainWindow::quit()
 	QApplication::quit();
 }
 
-/*
- * Prepare the area of the main window that allows the user
- * to enter data for a new contact.
- */
-void MainWindow::setupDataEntryFrame()
-{
-	// Create a frame to old the data entry widgets
-	dataEntryFrame = new QFrame();
-
-	// Create a layout for the data entry widgets
-	QGridLayout *dataEntryLayout = new QGridLayout(dataEntryFrame);
-
-	// Create labels for data entry
-	QLabel *firstLabel = new QLabel(QObject::tr("First Name"));
-	QLabel *lastLabel = new QLabel(QObject::tr("Last Name"));
-
-	// Create widgets for data entry
-	QLineEdit *firstEdit = new QLineEdit();
-	QLineEdit *lastEdit = new QLineEdit();
-
-	// Create a button
-	QPushButton *addContactButton = new QPushButton("&Add Contact");
-	connect(addContactButton, &QPushButton::clicked, this, &MainWindow::notImplemented);
-
-	// Add labels to data entry layout
-	dataEntryLayout->addWidget(firstLabel, 0, 0);
-	dataEntryLayout->addWidget(firstEdit, 0, 1);
-	dataEntryLayout->addWidget(lastLabel, 1, 0);
-	dataEntryLayout->addWidget(lastEdit, 1, 1);
-	dataEntryLayout->addWidget(addContactButton, 2, 1, 1, 2);
-
-}
-
 void MainWindow::notImplemented() {
 	QMessageBox::warning(this, "Oops!", "This function is not implemented");
 }
 
 void MainWindow::refreshContactsView()
 {
-	QSqlTableModel *model = new QSqlTableModel();
-	model->setTable("contacts");
-	model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-	model->select();
-
-	if (model->lastError().isValid())
+	if (contactsModel != nullptr)
 	{
-		QMessageBox::warning(this, model->lastError().driverText(),
-			model->lastError().databaseText()
-		);
-		db.close();
-		mainStatusBar->showMessage(tr("Disconnected"));
-		return;
-	}
-	// Set human-readable headers (optional)
-	model->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
-	model->setHeaderData(1, Qt::Horizontal, QObject::tr("First Name"));
-	model->setHeaderData(2, Qt::Horizontal, QObject::tr("Last Name"));
-	model->setHeaderData(3, Qt::Horizontal, QObject::tr("Address 1"));
-	model->setHeaderData(4, Qt::Horizontal, QObject::tr("Address 2"));
-	model->setHeaderData(5, Qt::Horizontal, QObject::tr("City"));
-	model->setHeaderData(6, Qt::Horizontal, QObject::tr("State"));
-	model->setHeaderData(7, Qt::Horizontal, QObject::tr("Zip Code"));
-	model->setHeaderData(8, Qt::Horizontal, QObject::tr("Phone #1"));
-	model->setHeaderData(9, Qt::Horizontal, QObject::tr("Phone #2"));
-	model->setHeaderData(10, Qt::Horizontal, QObject::tr("E-mail #1"));
-	model->setHeaderData(11, Qt::Horizontal, QObject::tr("E-mail #2"));
-	model->setHeaderData(12, Qt::Horizontal, QObject::tr("Birthday"));
+		contactsModel = new QSqlTableModel();
+		contactsModel->setTable("contacts");
+		contactsModel->setEditStrategy(QSqlTableModel::OnRowChange);
+		contactsModel->select();
 
-	contactsView->setModel(model);
-	contactsView->hideColumn(0);
-	contactsView->resizeColumnsToContents();
-	contactsView->horizontalHeader()->setStretchLastSection(true);
+		if (contactsModel->lastError().isValid())
+		{
+			QMessageBox::warning(this, contactsModel->lastError().driverText(),
+				contactsModel->lastError().databaseText()
+			);
+			db.close();
+			mainStatusBar->showMessage(tr("Disconnected"));
+			return;
+		}
+		// Set human-readable headers (optional)
+		contactsModel->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
+		contactsModel->setHeaderData(1, Qt::Horizontal, QObject::tr("First Name"));
+		contactsModel->setHeaderData(2, Qt::Horizontal, QObject::tr("Last Name"));
+		contactsModel->setHeaderData(3, Qt::Horizontal, QObject::tr("Address 1"));
+		contactsModel->setHeaderData(4, Qt::Horizontal, QObject::tr("Address 2"));
+		contactsModel->setHeaderData(5, Qt::Horizontal, QObject::tr("City"));
+		contactsModel->setHeaderData(6, Qt::Horizontal, QObject::tr("State"));
+		contactsModel->setHeaderData(7, Qt::Horizontal, QObject::tr("Zip Code"));
+		contactsModel->setHeaderData(8, Qt::Horizontal, QObject::tr("Phone #1"));
+		contactsModel->setHeaderData(9, Qt::Horizontal, QObject::tr("Phone #2"));
+		contactsModel->setHeaderData(10, Qt::Horizontal, QObject::tr("E-mail #1"));
+		contactsModel->setHeaderData(11, Qt::Horizontal, QObject::tr("E-mail #2"));
+		contactsModel->setHeaderData(12, Qt::Horizontal, QObject::tr("Birthday"));
+		contactsView->setModel(contactsModel);
+		contactsView->hideColumn(0);
+		contactsView->resizeColumnsToContents();
+		contactsView->horizontalHeader()->setStretchLastSection(true);
+	}
 }
 
 /*
