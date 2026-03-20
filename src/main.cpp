@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 	MainWindow w;
 
 	// Set title
-	w.setWindowTitle("Qt Demo Application");
+	w.setWindowTitle("Contact Manager");
 
 	// Show main window
 	w.show();
