@@ -21,6 +21,7 @@
 #include <QDialogButtonBox>
 #include <QString>
 #include <QDateEdit>
+#include <QCheckBox>
 #include <iostream>
 
 class MainWindow : public QMainWindow

@@ -79,6 +79,7 @@ void MainWindow::createOrEditContact(const int contact_id)
 	QLabel *email1Label = new QLabel(QObject::tr("E-mail #1:"));
 	QLabel *email2Label = new QLabel(QObject::tr("E-mail #2:"));
 	QLabel *bdayLabel = new QLabel(QObject::tr("Birthday:"));
+	QLabel *bdaySaveLabel = new QLabel(QObject::tr("Save Birthday?"));
 
 	// Create widgets for data entry
 	QLineEdit *firstEdit = new QLineEdit();
@@ -93,6 +94,7 @@ void MainWindow::createOrEditContact(const int contact_id)
 	QLineEdit *email1Edit = new QLineEdit();
 	QLineEdit *email2Edit = new QLineEdit();
 	QDateEdit *bdayEdit = new QDateEdit();
+	QCheckBox *bdaySaveCheckbox = new QCheckBox();
 
 	// Apply input masks to various fields to control what the user enters
 	phone1Edit->setInputMask("999-999-9999");
@@ -118,6 +120,8 @@ void MainWindow::createOrEditContact(const int contact_id)
 	contactLayout->addWidget(lastEdit, 3, 0);
 	contactLayout->addWidget(bdayLabel, 4, 0);
 	contactLayout->addWidget(bdayEdit, 5, 0);
+	contactLayout->addWidget(bdaySaveLabel, 6, 0);
+	contactLayout->addWidget(bdaySaveCheckbox, 7, 0);
 
 	contactLayout->addWidget(address1Label, 0, 2, 1, 3);
 	contactLayout->addWidget(address1Edit, 1, 2, 1, 3);
@@ -186,6 +190,7 @@ void MainWindow::createOrEditContact(const int contact_id)
 			QSqlRecord rec = contactsModel->record();
 
 			// Remove the 0th field since the driver tries to assign a NULL value
+			// This shifts all other column numbers as a result.
 			rec.remove(0);
 
 			// Pretty blindly assign values to the fields from the form data
@@ -200,7 +205,12 @@ void MainWindow::createOrEditContact(const int contact_id)
 			rec.setValue(8, phone2Edit->text());
 			rec.setValue(9, email1Edit->text());
 			rec.setValue(10, email2Edit->text());
-			rec.remove(11);
+			if (bdaySaveCheckbox->checkState() == Qt::Checked) {
+				// Save the birthday
+				rec.setValue(11, bdayEdit->date());
+			} else {
+				rec.remove(11);
+			}
 			
 
 			// Try to insert the new row
