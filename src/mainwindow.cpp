@@ -36,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent)
 	// Add data table widget to the central widget layout
 	mainLayout->addWidget(contactsView);
 
-	resize(1024, 768);
+	resize(1920, 1080);
 }
 
 // Destructor
@@ -94,6 +94,7 @@ void MainWindow::createOrEditContact(const int contact_id)
 	QLineEdit *email2Edit = new QLineEdit();
 	QDateEdit *bdayEdit = new QDateEdit();
 
+	// Apply input masks to various fields to control what the user enters
 	phone1Edit->setInputMask("999-999-9999");
 	phone2Edit->setInputMask("999-999-9999");
 	stateEdit->setInputMask(">AA");
@@ -109,13 +110,15 @@ void MainWindow::createOrEditContact(const int contact_id)
 	connect(contactButtonBox, &QDialogButtonBox::accepted, contactDialog, &QDialog::accept);
 	connect(contactButtonBox, &QDialogButtonBox::rejected, contactDialog, &QDialog::reject);
 
-	// Add labels to data entry layout
+	// Layout the dialog box
+
 	contactLayout->addWidget(firstLabel, 0, 0);
 	contactLayout->addWidget(firstEdit, 1, 0);
 	contactLayout->addWidget(lastLabel, 2, 0);
 	contactLayout->addWidget(lastEdit, 3, 0);
 	contactLayout->addWidget(bdayLabel, 4, 0);
 	contactLayout->addWidget(bdayEdit, 5, 0);
+
 	contactLayout->addWidget(address1Label, 0, 2, 1, 3);
 	contactLayout->addWidget(address1Edit, 1, 2, 1, 3);
 	contactLayout->addWidget(address2Label, 2, 2, 1, 3);
@@ -126,6 +129,7 @@ void MainWindow::createOrEditContact(const int contact_id)
 	contactLayout->addWidget(stateEdit, 5, 4);
 	contactLayout->addWidget(zipLabel, 6, 2);
 	contactLayout->addWidget(zipEdit, 7, 2);
+
 	contactLayout->addWidget(phone1Label, 0, 6);
 	contactLayout->addWidget(phone1Edit, 1, 6);
 	contactLayout->addWidget(phone2Label, 2, 6);
@@ -137,6 +141,7 @@ void MainWindow::createOrEditContact(const int contact_id)
 	
 	contactLayout->addWidget(contactButtonBox, 10, 0, 1, 7, Qt::AlignCenter);
 
+	// Set minimum widths for the columns of the layout
 	contactLayout->setColumnMinimumWidth(0, 150);
 	contactLayout->setColumnMinimumWidth(1, 5);
 	contactLayout->setColumnMinimumWidth(2, 125);
@@ -145,55 +150,88 @@ void MainWindow::createOrEditContact(const int contact_id)
 	contactLayout->setColumnMinimumWidth(5, 5);
 	contactLayout->setColumnMinimumWidth(6, 300);
 
+	// Put focus on the first name field
 	firstEdit->setFocus();
 
+	// To store the result of the dialog box
 	int value;
 
+	// Show the dialog and try to get the information from the user
 	while (value = contactDialog->exec())
 	{
+		// The user clicked "Ok"
 		if (value == 1)
 		{
+			// Check if the user provided a first name
 			if (firstEdit->text().isEmpty())
 			{
+				// No? Try again.
+				QMessageBox::warning(this, "Required Field Missing",
+					"First Name is a required field"
+				);
 				continue;
 			}
 
+			// Check if the user provided a last name
 			if (lastEdit->text().isEmpty())
 			{
+				// No? Try again.
+				QMessageBox::warning(this, "Required Field Missing",
+					"Last Name is a required field"
+				);
 				continue;
 			}
 
+			// Get a new empty record from the data model
 			QSqlRecord rec = contactsModel->record();
 
-			rec.setValue(1, firstEdit->text());
-			rec.setValue(2, lastEdit->text());
-			rec.setValue(3, address1Edit->text());
-			rec.setValue(4, address2Edit->text());
-			rec.setValue(5, cityEdit->text());
-			rec.setValue(6, stateEdit->text());
-			rec.setValue(7, zipEdit->text());
-			rec.setValue(8, phone1Edit->text());
-			rec.setValue(9, phone2Edit->text());
-			rec.setValue(10, email1Edit->text());
-			rec.setValue(11, email2Edit->text());
+			// Remove the 0th field since the driver tries to assign a NULL value
+			rec.remove(0);
 
-			bool success = contactsModel->insertRecord(-1, rec);
+			// Pretty blindly assign values to the fields from the form data
+			rec.setValue(0, firstEdit->text());
+			rec.setValue(1, lastEdit->text());
+			rec.setValue(2, address1Edit->text());
+			rec.setValue(3, address2Edit->text());
+			rec.setValue(4, cityEdit->text());
+			rec.setValue(5, stateEdit->text());
+			rec.setValue(6, zipEdit->text());
+			rec.setValue(7, phone1Edit->text());
+			rec.setValue(8, phone2Edit->text());
+			rec.setValue(9, email1Edit->text());
+			rec.setValue(10, email2Edit->text());
+			rec.remove(11);
+			
 
-			std::cerr << contactsModel->lastError().text().toStdString() << std::endl;
+			// Try to insert the new row
+			bool record_inserted = contactsModel->insertRecord(-1, rec);
 
-			if (success) {
-				std::cerr << "Insert worked!" << std::endl;
+			if (record_inserted)
+			{
+				// Commit
+				bool submitted = contactsModel->submitAll();
+
+				if (!submitted) {
+					QMessageBox::warning(
+						this,
+						contactsModel->lastError().driverText(),
+						contactsModel->lastError().databaseText()
+					);
+					break;
+				}
 			}
 			else
 			{
-				std::cerr << "Insert failed!!" << std::endl;
+				// Put a message box here!
+				QMessageBox::warning(
+					this,
+					contactsModel->lastError().driverText(),
+					contactsModel->lastError().databaseText()
+				);
 			}
-
-			for (int i =0; i < rec.count(); i++)
-			{
-				std::cerr << "Column " << i << " is " << rec.fieldName(i).toStdString() << std::endl;
-			}
-		} else {
+		}
+		else
+		{
 			// User clicked "Cancel"
 		}
 
@@ -439,7 +477,7 @@ void MainWindow::refreshContactsView()
 	{
 		contactsModel = new QSqlTableModel();
 		contactsModel->setTable("contacts");
-		contactsModel->setEditStrategy(QSqlTableModel::OnRowChange);
+		contactsModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
 		contactsModel->select();
 
 		if (contactsModel->lastError().isValid())
@@ -465,10 +503,27 @@ void MainWindow::refreshContactsView()
 		contactsModel->setHeaderData(10, Qt::Horizontal, QObject::tr("E-mail #1"));
 		contactsModel->setHeaderData(11, Qt::Horizontal, QObject::tr("E-mail #2"));
 		contactsModel->setHeaderData(12, Qt::Horizontal, QObject::tr("Birthday"));
+
 		contactsView->setModel(contactsModel);
 		contactsView->hideColumn(0);
-		contactsView->resizeColumnsToContents();
-		contactsView->horizontalHeader()->setStretchLastSection(true);
+		contactsView->setColumnWidth(1, 150);
+		contactsView->setColumnWidth(2, 150);
+		contactsView->setColumnWidth(3, 200);
+		contactsView->setColumnWidth(4, 200);
+		contactsView->setColumnWidth(5, 150);
+		contactsView->setColumnWidth(6, 50);
+		contactsView->setColumnWidth(7, 75);
+		contactsView->setColumnWidth(8, 150);
+		contactsView->setColumnWidth(9, 150);
+		contactsView->setColumnWidth(10, 200);
+		contactsView->setColumnWidth(11, 200);
+		contactsView->setColumnWidth(12, 150);
+
+		contactsView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+		contactsView->setSelectionBehavior(QAbstractItemView::SelectRows);
+		contactsView->setSelectionMode(QAbstractItemView::SingleSelection);
+		// contactsView->horizontalHeader()->setStretchLastSection(true);
+		// contactsView->resizeColumnsToContents();
 	}
 }
 
@@ -479,7 +534,7 @@ void MainWindow::setupTableView()
 {
 	// Create a QTableView and set the model
 	contactsView = new QTableView();
-	contactsView->horizontalHeader()->setStretchLastSection(true);
+	// contactsView->horizontalHeader()->setStretchLastSection(true);
 
 	// Hide the vertical header of the table
 	contactsView->verticalHeader()->hide();
