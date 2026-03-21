@@ -8,12 +8,14 @@
 #include <QDialogButtonBox>
 #include <QCheckBox>
 #include <QGridLayout>
+#include <QPushButton>
 
 class ContactDialog : public QDialog
 {
 	Q_OBJECT
 
 private slots:
+	void validateInput();
 
 private:
 	QLabel *labelFirstName;

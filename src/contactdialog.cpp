@@ -66,6 +66,19 @@ void ContactDialog::setupUI()
 	editPhone1->setValidator(phoneNumberValidator);
 	editPhone2->setValidator(phoneNumberValidator);
 
+	// Connect input widgets to validation routine
+	connect(editFirstName, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+	connect(editLastName, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+	connect(editAddress1, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+	connect(editAddress2, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+	connect(editCity, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+	connect(editState, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+	connect(editZipCode, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+	connect(editPhone1, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+	connect(editPhone2, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+	connect(editEmail1, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+	connect(editEmail2, &QLineEdit::textChanged, this, &ContactDialog::validateInput);
+
 	// Create a layout
 	QGridLayout *formLayout = new QGridLayout(this);
 
@@ -115,6 +128,19 @@ void ContactDialog::setupUI()
 
 	// Ensure the "First Name" field has focus
 	editFirstName->setFocus();
+
+	// Disable the "Ok" button and allow the input validation to enable it
+	buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
+}
+
+void ContactDialog::validateInput() {
+	bool allInputValid;
+
+	allInputValid = !editFirstName->text().isEmpty() &&
+		!editLastName->text().isEmpty() &&
+		(editPhone1->hasAcceptableInput() || editPhone1->text().isEmpty()) &&
+		(editPhone2->hasAcceptableInput() || editPhone2->text().isEmpty());
+	buttons->button(QDialogButtonBox::Ok)->setEnabled(allInputValid);
 }
 
 QString ContactDialog::firstName() {
