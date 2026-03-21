@@ -30,6 +30,8 @@ private slots:
 	void about();
 	void quit();
 	void createOrEditContact();
+	void deleteContact();
+	void notImplemented();
 
 private:
 	bool connectToDatabase();
@@ -40,7 +42,6 @@ private:
 	void setupTableView();
 	void refreshContactsView();
 	void disconnectDb();
-	void notImplemented();
 
 	QStatusBar *mainStatusBar;
 	QToolBar *fileToolBar;
@@ -51,6 +52,7 @@ private:
 	QAction *connectAct;
 	QAction *disconnectAct;
 	QAction *newContactAct;
+	QAction *deleteContactAct;
 	QDialog *loginDialog;
 	QWidget *centralWidget;
 	QSqlDatabase db;

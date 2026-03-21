@@ -263,6 +263,7 @@ void MainWindow::createToolbars()
 {
 	fileToolBar = addToolBar(tr("File"));
 	fileToolBar->addAction(newContactAct);
+	fileToolBar->addAction(deleteContactAct);
 	fileToolBar->setAllowedAreas(Qt::TopToolBarArea);
 	fileToolBar->setFloatable(false);
 	fileToolBar->setMovable(false);
@@ -297,7 +298,77 @@ void MainWindow::createActions()
 	newContactAct->setShortcuts(QKeySequence::New);
 	newContactAct->setStatusTip(tr("Create a new contact"));
 	connect(newContactAct, &QAction::triggered, this, &MainWindow::createOrEditContact);
+
+	// Create "Delete Contact" action
+	deleteContactAct = new QAction(
+		QIcon::fromTheme(QIcon::ThemeIcon::EditDelete),
+		tr("&Delete"),
+		this
+	);
+	deleteContactAct->setStatusTip(tr("Delete selected contact"));
+	connect(deleteContactAct, &QAction::triggered, this, &MainWindow::deleteContact);
 }
+
+void MainWindow::deleteContact() {
+	QItemSelectionModel *selectionModel = contactsView->selectionModel();
+
+	QString firstName;
+	QString lastName;
+	QModelIndex index;
+
+	if (selectionModel->currentIndex().isValid()) {
+		// Get the highlighted row
+		int highlightedRow = selectionModel->currentIndex().row();
+
+		// Get the current index
+		index = selectionModel->currentIndex();
+
+		// A place to temporarily store data
+		QVariant data;
+
+		// Retrieve data in column #1
+		data = index.sibling(highlightedRow, 1).data();
+
+		// Save to first name
+		firstName = data.toString();
+
+		// Retrieve data in colume #2
+		data = index.sibling(highlightedRow, 2).data();
+
+		// Save to last name
+		lastName = data.toString();
+	}
+
+	// Display the message box to confirm deletion and store which button was pressed
+	int pressed = QMessageBox::question(this,
+		"Are You Sure?", "Delete contact " + firstName + " " + lastName + "?");
+
+
+	// If the "Yes" button was pressed...
+	if (pressed == QMessageBox::Yes) {
+		// Delete the row from the data model
+		bool row_deleted = contactsModel->removeRow(index.row(), index.parent());
+
+		if (row_deleted) {
+			// Presist the change
+			bool committed = contactsModel->submitAll();
+
+			// Display a message box if something went wrong
+			if (!committed) {
+				QMessageBox *box;
+				QMessageBox::warning(this, contactsModel->lastError().driverText(),
+					contactsModel->lastError().databaseText()
+				);
+			}
+		} else {
+			// Display a message box if something went wrong
+			QMessageBox::warning(this, contactsModel->lastError().driverText(),
+				contactsModel->lastError().databaseText()
+			);
+		}
+	}
+}
+	
 
 void MainWindow::disconnectDb()
 {
@@ -340,7 +411,7 @@ void MainWindow::quit()
 }
 
 void MainWindow::notImplemented() {
-	QMessageBox::warning(this, "Oops!", "This function is not implemented");
+	QMessageBox::warning(this, "Oops!", "This feature is not implemented");
 }
 
 void MainWindow::refreshContactsView()
