@@ -1,5 +1,6 @@
 #include <QApplication>
 #include "mainwindow.h"
+#include "logindialog.h"
 #include "contactdialog.h"
 
 // Constructor for the main window
@@ -172,49 +173,7 @@ void MainWindow::openDbConnectionDialog()
 		return;
 	}
 
-	loginDialog = new QDialog(this);
-	loginDialog->setWindowTitle("Enter Database Credentials");
-	// loginDialog->resize(400,300);
-
-	// Create some widgets to put into the dialog?
-	QGridLayout *dbConnectLayout = new QGridLayout(loginDialog);
-
-	// Set up widgets to collect database login credentials
-	QLabel *dbHostnameLabel = new QLabel(tr("DB Hostname:"));
-	QLabel *dbNameLabel = new QLabel(tr("DB Name:"));
-	QLabel *dbUsernameLabel = new QLabel(tr("DB Username:"));
-	QLabel *dbPasswordLabel = new QLabel(tr("DB Password:"));
-	QLineEdit *dbHostnameEntry = new QLineEdit(tr("localhost"));
-	QLineEdit *dbNameEntry = new QLineEdit(tr("contacts"));
-	QLineEdit *dbUsernameEntry = new QLineEdit();
-	QLineEdit *dbPasswordEntry = new QLineEdit();
-
-	// Configure text entry fields
-	dbPasswordEntry->setEchoMode(QLineEdit::Password);
-
-	// Set up some buttons for the dialog box (Ok & Cancel)
-	QDialogButtonBox *dbConnectButtonBox = new QDialogButtonBox(
-		QDialogButtonBox::Cancel | QDialogButtonBox::Ok,
-		Qt::Horizontal, loginDialog
-	);
-	connect(dbConnectButtonBox, &QDialogButtonBox::accepted, loginDialog, &QDialog::accept);
-	connect(dbConnectButtonBox, &QDialogButtonBox::rejected, loginDialog, &QDialog::reject);
-
-	// Add widgets to the layout
-	dbConnectLayout->addWidget(dbHostnameLabel, 0, 0);
-	dbConnectLayout->addWidget(dbNameLabel, 1, 0);
-	dbConnectLayout->addWidget(dbUsernameLabel, 2, 0);
-	dbConnectLayout->addWidget(dbPasswordLabel, 3, 0);
-	dbConnectLayout->addWidget(dbHostnameEntry, 0, 1);
-	dbConnectLayout->addWidget(dbNameEntry, 1, 1);
-	dbConnectLayout->addWidget(dbUsernameEntry, 2, 1);
-	dbConnectLayout->addWidget(dbPasswordEntry, 3, 1);
-	dbConnectLayout->addWidget(dbConnectButtonBox, 4, 0, 1, 2, Qt::AlignCenter);
-
-	// Ensure username field has the keyboard focus
-	dbUsernameEntry->setFocus();
-
-	loginDialog->setLayout(dbConnectLayout);
+	LoginDialog *loginDialog = new LoginDialog(this);
 
 	while (!db.isOpen()) {
 		int value = loginDialog->exec();
@@ -227,43 +186,38 @@ void MainWindow::openDbConnectionDialog()
 		if (value == 1)
 		{
 			// How do i get the values from these form fields?
-			if (dbHostnameEntry->text().isEmpty()) {
+			if (loginDialog->hostname().isEmpty()) {
 				QMessageBox::warning(this, "Connection Status",
 					tr("Database hostname required")
 				);
 				continue;
 			}
 
-			if (dbNameEntry->text().isEmpty()) {
+			if (loginDialog->databaseName().isEmpty()) {
 				QMessageBox::warning(this, "Connection Status",
 					tr("Database name required")
 				);
 				continue;
 			}
 
-			if (dbUsernameEntry->text().isEmpty()) {
+			if (loginDialog->username().isEmpty()) {
 				QMessageBox::warning(this, "Connection Status",
 					tr("Database username required")
 				);
 				continue;
 			}
 
-			if (dbPasswordEntry->text().isEmpty()) {
+			if (loginDialog->password().isEmpty()) {
 				QMessageBox::warning(this, "Connection Status",
 					tr("Database password required")
 				);
 				continue;
 			}
  
-			// db.setHostName(std::getenv("CONTACTS_DB_HOSTNAME"));
-			// db.setDatabaseName(std::getenv("CONTACTS_DB_NAME"));
-			// db.setUserName(std::getenv("CONTACTS_DB_USERNAME"));
-			// db.setPassword(std::getenv("CONTACTS_DB_PASSWORD"));
-
-			db.setHostName(dbHostnameEntry->text());
-			db.setDatabaseName(dbNameEntry->text());
-			db.setUserName(dbUsernameEntry->text());
-			db.setPassword(dbPasswordEntry->text());
+			db.setHostName(loginDialog->hostname());
+			db.setDatabaseName(loginDialog->databaseName());
+			db.setUserName(loginDialog->username());
+			db.setPassword(loginDialog->password());
 #ifdef DEBUG
 
 			std::cerr << "The DB hostname entered was " <<

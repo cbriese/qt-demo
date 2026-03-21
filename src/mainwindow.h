@@ -13,11 +13,7 @@
 #include <QSqlError>
 #include <QSqlRecord>
 #include <QHeaderView>
-#include <QGridLayout>
 #include <QVBoxLayout>
-#include <QLabel>
-#include <QLineEdit>
-#include <QDialogButtonBox>
 #include <QString>
 #include <iostream>
 
