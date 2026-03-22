@@ -1,9 +1,10 @@
 #include "contactdialog.h"
 
 // Constructor for the main window
-ContactDialog::ContactDialog(QWidget *parent)
+ContactDialog::ContactDialog(QWidget *parent, QSqlRecord *rec)
     : QDialog(parent)
 {
+	setContact(rec);
 	setWindowTitle(tr("New Contact"));
 	setupUI();
 	setModal(true);
@@ -52,6 +53,60 @@ void ContactDialog::setupUI()
 	buttons->addButton( QDialogButtonBox::Cancel );
 	connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
 	connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+	// If we have a contact record, try to fill in the fields
+	if (contactRec != nullptr)
+	{
+		setWindowTitle("Modify Contact");
+
+		if (!contactRec->field("first_name").value().toString().isEmpty()) {
+			editFirstName->setText(contactRec->field("first_name").value().toString());
+		}
+
+		if (!contactRec->field("last_name").value().toString().isEmpty()) {
+			editLastName->setText(contactRec->field("last_name").value().toString());
+		}
+
+		if (!contactRec->field("address_1").value().toString().isEmpty()) {
+			editAddress1->setText(contactRec->field("address_1").value().toString());
+		}
+
+		if (!contactRec->field("address_2").value().toString().isEmpty()) {
+			editAddress2->setText(contactRec->field("address_2").value().toString());
+		}
+
+		if (!contactRec->field("city").value().toString().isEmpty()) {
+			editCity->setText(contactRec->field("city").value().toString());
+		}
+
+		if (!contactRec->field("state").value().toString().isEmpty()) {
+			editState->setText(contactRec->field("state").value().toString());
+		}
+
+		if (!contactRec->field("zipcode").value().toString().isEmpty()) {
+			editZipCode->setText(contactRec->field("zipcode").value().toString());
+		}
+
+		if (!contactRec->field("phone_1").value().toString().isEmpty()) {
+			editPhone1->setText(contactRec->field("phone_1").value().toString());
+		}
+
+		if (!contactRec->field("phone_2").value().toString().isEmpty()) {
+			editPhone2->setText(contactRec->field("phone_2").value().toString());
+		}
+
+		if (!contactRec->field("email_1").value().toString().isEmpty()) {
+			editEmail1->setText(contactRec->field("email_1").value().toString());
+		}
+
+		if (!contactRec->field("email_2").value().toString().isEmpty()) {
+			editEmail2->setText(contactRec->field("email_2").value().toString());
+		}
+
+		if (!contactRec->field("birthday").isNull()) {
+			editBirthday->setDate(contactRec->field("birthday").value().toDate());
+		}
+	}
 
 	// Apply input masks
 	editState->setInputMask(">AA");
@@ -129,8 +184,12 @@ void ContactDialog::setupUI()
 	// Ensure the "First Name" field has focus
 	editFirstName->setFocus();
 
-	// Disable the "Ok" button and allow the input validation to enable it
-	buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
+	// Disable the "Ok" button if we are creating a contact
+	// and allow the input validation to enable it
+	if (contactRec == nullptr) {
+		buttons->button(QDialogButtonBox::Ok)->setEnabled(false);
+	}
+
 }
 
 void ContactDialog::validateInput() {
@@ -141,6 +200,11 @@ void ContactDialog::validateInput() {
 		(editPhone1->hasAcceptableInput() || editPhone1->text().isEmpty()) &&
 		(editPhone2->hasAcceptableInput() || editPhone2->text().isEmpty());
 	buttons->button(QDialogButtonBox::Ok)->setEnabled(allInputValid);
+}
+
+void ContactDialog::setContact(QSqlRecord *record) {
+
+	contactRec = record;
 }
 
 QString ContactDialog::firstName() {

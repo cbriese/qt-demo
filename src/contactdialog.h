@@ -9,6 +9,8 @@
 #include <QCheckBox>
 #include <QGridLayout>
 #include <QPushButton>
+#include <QSqlRecord>
+#include <QSqlField>
 
 class ContactDialog : public QDialog
 {
@@ -47,11 +49,14 @@ private:
 	QDateEdit *editBirthday;
 	QCheckBox *checkSaveBirthday;
 
+	QSqlRecord *contactRec;
+
 	void setupUI();
 
 public:
-	ContactDialog(QWidget *parent = nullptr);
+	ContactDialog(QWidget *parent = nullptr, QSqlRecord *rec = nullptr);
 	~ContactDialog();
+	void setContact(QSqlRecord *);
 	QString firstName();
 	QString lastName();
 	QString address1();

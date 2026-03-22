@@ -12,6 +12,7 @@
 #include <QSqlTableModel>
 #include <QSqlError>
 #include <QSqlRecord>
+#include <QSqlField>
 #include <QHeaderView>
 #include <QVBoxLayout>
 #include <QString>
@@ -32,6 +33,7 @@ private slots:
 	void createOrEditContact();
 	void deleteContact();
 	void notImplemented();
+	void modifyContact();
 
 private:
 	bool connectToDatabase();
@@ -53,6 +55,7 @@ private:
 	QAction *disconnectAct;
 	QAction *newContactAct;
 	QAction *deleteContactAct;
+	QAction *modifyContactAct;
 	QDialog *loginDialog;
 	QWidget *centralWidget;
 	QSqlDatabase db;

@@ -55,12 +55,104 @@ void MainWindow::createStatusBar()
 	this->setStatusBar(mainStatusBar);
 }
 
+void MainWindow::modifyContact() {
+	QItemSelectionModel *selectionModel = contactsView->selectionModel();
+
+	int highlightedRow;
+
+	if (selectionModel->currentIndex().isValid()) {
+		// Get the highlighted row
+		highlightedRow = selectionModel->currentIndex().row();
+	}
+	else
+	{
+		return;
+	}
+
+	// Get the record associated with the highlighted row
+	QSqlRecord rec = contactsModel->record(highlightedRow);
+
+	ContactDialog *contactDialog = new ContactDialog(this, &rec);
+
+	int value = contactDialog->exec();
+
+	int fields_changed = 0;
+
+	if (value == 1) {
+		// Let's try to update the record
+		if (contactDialog->firstName() != rec.field("first_name").value().toString()) {
+			rec.setValue("first_name", contactDialog->firstName());
+			fields_changed++;
+		}
+
+		if (contactDialog->lastName() != rec.field("last_name").value().toString()) {
+			rec.setValue("last_name", contactDialog->lastName());
+			fields_changed++;
+		}
+
+		if (contactDialog->address1() != rec.field("address_1").value().toString()) {
+			rec.setValue("address_1", contactDialog->address1());
+			fields_changed++;
+		}
+
+		if (contactDialog->address2() != rec.field("address_2").value().toString()) {
+			rec.setValue("address_2", contactDialog->address2());
+			fields_changed++;
+		}
+
+		if (contactDialog->city() != rec.field("city").value().toString()) {
+			rec.setValue("city", contactDialog->city());
+			fields_changed++;
+		}
+
+		if (contactDialog->state() != rec.field("state").value().toString()) {
+			rec.setValue("state", contactDialog->state());
+			fields_changed++;
+		}
+
+		if (contactDialog->zipCode() != rec.field("zipcode").value().toString()) {
+			rec.setValue("zipcode", contactDialog->zipCode());
+			fields_changed++;
+		}
+
+		if (contactDialog->phone1() != rec.field("phone_1").value().toString()) {
+			rec.setValue("phone_1", contactDialog->phone1());
+			fields_changed++;
+		}
+
+		if (contactDialog->phone2() != rec.field("phone_2").value().toString()) {
+			rec.setValue("phone_2", contactDialog->phone2());
+			fields_changed++;
+		}
+
+		if (contactDialog->email1() != rec.field("email_1").value().toString()) {
+			rec.setValue("email_1", contactDialog->email1());
+			fields_changed++;
+		}
+
+		if (contactDialog->email2() != rec.field("email_2").value().toString()) {
+			rec.setValue("email_2", contactDialog->email2());
+			fields_changed++;
+		}
+
+		if (contactDialog->saveBirthday()) {
+			rec.setValue("birthday", contactDialog->birthday());
+			fields_changed++;
+		}
+
+		if (fields_changed) {
+			contactsModel->setRecord(highlightedRow, rec);
+			contactsModel->submitAll();
+		}
+	}
+}
+
 /*
  * Create a dialog box to create or modify a contact.
  */
 void MainWindow::createOrEditContact()
 {
-	ContactDialog *contactDialog = new ContactDialog(this);
+	ContactDialog *contactDialog = new ContactDialog(this, nullptr);
 
 	// To store the result of the dialog box
 	int value;
@@ -99,24 +191,24 @@ void MainWindow::createOrEditContact()
 			rec.remove(0);
 
 			// Pretty blindly assign values to the fields from the form data
-			rec.setValue(0, contactDialog->firstName());
-			rec.setValue(1, contactDialog->lastName());
-			rec.setValue(2, contactDialog->address1());
-			rec.setValue(3, contactDialog->address2());
-			rec.setValue(4, contactDialog->city());
-			rec.setValue(5, contactDialog->state());
-			rec.setValue(6, contactDialog->zipCode());
+			rec.setValue("first_name", contactDialog->firstName());
+			rec.setValue("last_name", contactDialog->lastName());
+			rec.setValue("address_1", contactDialog->address1());
+			rec.setValue("address_2", contactDialog->address2());
+			rec.setValue("city", contactDialog->city());
+			rec.setValue("state", contactDialog->state());
+			rec.setValue("zipcode", contactDialog->zipCode());
 			if (contactDialog->phone1() != "--") {
-				rec.setValue(7, contactDialog->phone1());
+				rec.setValue("phone_1", contactDialog->phone1());
 			}
 			if (contactDialog->phone2() != "--") {
-				rec.setValue(8, contactDialog->phone2());
+				rec.setValue("phone_2", contactDialog->phone2());
 			}
-			rec.setValue(9, contactDialog->email1());
-			rec.setValue(10, contactDialog->email2());
+			rec.setValue("email_1", contactDialog->email1());
+			rec.setValue("email_2", contactDialog->email2());
 			if (contactDialog->saveBirthday()) {
 				// Save the birthday
-				rec.setValue(11, contactDialog->birthday());
+				rec.setValue("birthday", contactDialog->birthday());
 			} else {
 				rec.remove(11);
 			}
@@ -263,6 +355,7 @@ void MainWindow::createToolbars()
 {
 	fileToolBar = addToolBar(tr("File"));
 	fileToolBar->addAction(newContactAct);
+	fileToolBar->addAction(modifyContactAct);
 	fileToolBar->addAction(deleteContactAct);
 	fileToolBar->setAllowedAreas(Qt::TopToolBarArea);
 	fileToolBar->setFloatable(false);
@@ -307,6 +400,15 @@ void MainWindow::createActions()
 	);
 	deleteContactAct->setStatusTip(tr("Delete selected contact"));
 	connect(deleteContactAct, &QAction::triggered, this, &MainWindow::deleteContact);
+
+	// Create "Modify Contact" action
+	modifyContactAct = new QAction(
+		QIcon::fromTheme(QIcon::ThemeIcon::DocumentOpen),
+		tr("&Modify"),
+		this
+	);
+	modifyContactAct->setStatusTip(tr("Modify selected contact"));
+	connect(modifyContactAct, &QAction::triggered, this, &MainWindow::modifyContact);
 }
 
 void MainWindow::deleteContact() {
@@ -465,8 +567,6 @@ void MainWindow::refreshContactsView()
 		contactsView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 		contactsView->setSelectionBehavior(QAbstractItemView::SelectRows);
 		contactsView->setSelectionMode(QAbstractItemView::SingleSelection);
-		// contactsView->horizontalHeader()->setStretchLastSection(true);
-		// contactsView->resizeColumnsToContents();
 	}
 }
 
@@ -481,6 +581,8 @@ void MainWindow::setupTableView()
 
 	// Hide the vertical header of the table
 	contactsView->verticalHeader()->hide();
+
+	connect(contactsView, &QAbstractItemView::doubleClicked, this, &MainWindow::modifyContact);
 
 	if (db.isOpen())
 	{
